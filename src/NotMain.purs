@@ -1,4 +1,4 @@
-module Main where
+module NotMain where
 
 import Prelude
 
@@ -14,5 +14,5 @@ hello = do
   void $ D.button [P.onClick] [D.text "Say Hello"]
   D.text "Hello Sailor!"
 
-main :: Effect Unit
-main = runWidgetInDom "root" hello
+notMain :: Effect Unit
+notMain = runWidgetInDom "root" hello
