@@ -59,6 +59,11 @@ hello = D.div' [
     D.text "Hello Sailor!"
   ]
 
+outerLoop :: Signal HTML (Maybe DateTime)
+outerLoop = loopS Nothing \lastDateMay -> D.div_ [] do
+  dateTime <- dateTimeSig
+  display $ hello
+  pure $ pure $ dateTime
+
 main :: Effect Unit
-main = runWidgetInDom "root" $ do
-  hello
+main = runWidgetInDom "root" (dyn outerLoop)
