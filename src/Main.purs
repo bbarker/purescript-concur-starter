@@ -8,6 +8,8 @@ import Concur.React (HTML)
 import Concur.React.DOM as D
 import Concur.React.Props as P
 import Concur.React.Run (runWidgetInDom)
+import Control.Alt((<|>))
+import Control.Plus(empty)
 import Data.Date (canonicalDate)
 import Data.DateTime (DateTime(..))
 import Data.Either (Either(..), hush)
@@ -18,6 +20,12 @@ import Data.Time (Time(..))
 import Effect (Effect)
 import Effect.Class (liftEffect)
 import Effect.Now (nowDateTime)
+
+-- Or with a supplied initial value instead of using a Maybe
+runEffectInit :: forall a. a -> Effect a -> Signal HTML a
+runEffectInit i e = step i do
+  a <- liftEffect e
+  pure (step a empty)
 
 initDate :: DateTime
 initDate = makeDateTime 0 0 0 0 0 0 0
@@ -47,22 +55,20 @@ dateTimeWidg = do
 dateTimeSig :: Signal HTML DateTime
 dateTimeSig = justWait initDate (fireOnce dateTimeWidg) pure
 
-hello :: forall a. Widget HTML a
-hello = D.div' [
-  dyn $ do
-    dateTime <- dateTimeSig
-    let dt = show $ formatXsdDate $ dateTime
-    display $ D.div' [D.text dt]
-    pure unit
-  , do
-    void $ D.button [P.onClick] [D.text "Say Hello"]
-    D.text "Hello Sailor!"
-  ]
+hello :: String -> Signal HTML String
+hello s = step s do
+  greeting <- D.div'
+    [ "Hello" <$ D.button [P.onClick] [D.text "Say Hello"]
+    , "Namaste" <$ D.button [P.onClick] [D.text "Say Namaste"]
+    ]
+  _ <- D.text (greeting <> " Sailor!") <|> D.button [P.onClick] [D.text "restart"]
+  pure (hello greeting)
 
 outerLoop :: Signal HTML (Maybe DateTime)
 outerLoop = loopS Nothing \lastDateMay -> D.div_ [] do
+  helloOut <- hello "INIT"
   dateTime <- dateTimeSig
-  display $ hello
+  display $ D.text helloOut
   pure $ pure $ dateTime
 
 main :: Effect Unit
