@@ -3,7 +3,7 @@ module Main where
 import Prelude
 
 import Concur.Core (Widget)
-import Concur.Core.FRP (Signal, debounce, display, dyn, fireOnce, loopS, step)
+import Concur.Core.FRP (Signal, debounce, display, dyn, fireOnce, justWait, loopS, step)
 import Concur.React (HTML)
 import Concur.React.DOM as D
 import Concur.React.Props as P
@@ -40,18 +40,18 @@ makeDateTime year month day hour minute second millisecond =
 formatXsdDate :: DateTime -> Either String String
 formatXsdDate dt = FDT.formatDateTime "YYYY-MM-DD" dt
 
-nowTimeSig :: Signal HTML (Maybe DateTime)
-nowTimeSig = fireOnce nowTimeWidg
-
-nowTimeWidg :: Widget HTML DateTime
-nowTimeWidg = do
+dateTimeWidg :: Widget HTML DateTime
+dateTimeWidg = do
   liftEffect nowDateTime
+
+dateTimeSig :: Signal HTML DateTime
+dateTimeSig = justWait initDate (fireOnce dateTimeWidg) pure
 
 hello :: forall a. Widget HTML a
 hello = D.div' [
   dyn $ do
-    nowTimeMay <- nowTimeSig
-    let dt = show $ formatXsdDate <$> nowTimeMay
+    dateTime <- dateTimeSig
+    let dt = show $ formatXsdDate $ dateTime
     display $ D.div' [D.text dt]
     pure unit
   , do
